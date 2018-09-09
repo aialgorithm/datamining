@@ -1,9 +1,9 @@
 import numpy as np
 import copy
 
-#分类器
 class Clsssify():
     def __init__(self):
+        # 加载训练数据、测试数据
         self.train_data = self.loaddb("C:\\doc\\ch4\\irisTrainingSet.data.txt") 
         self.test_data = self.loaddb("C:\\doc\\ch4\\irisTestSet.data.txt")
         
@@ -18,15 +18,18 @@ class Clsssify():
         #train_data.pop(0)
         return train_data
     
+    #中位数
     def median(self, alist):
         if len(alist) % 2 == 1:
             return alist[int(len(alist) / 2)]
         else:
             return (alist[int(len(alist) / 2)] + alist[int(len(alist) / 2) - 1]) / 2.0
         
+    #绝对偏差
     def asd(self, alist, median):
         return np.sum(abs(np.array(alist) - median))/len(alist)
-          
+     
+    #z-factor修正标准化（准确率93.3%）
     def vector_standard(self, data):
         median_list = []
         asd_list = []
@@ -44,24 +47,7 @@ class Clsssify():
             #st_list.append((np.array(col_list) - median_list[i]) / asd_list[i])
         return st_list
     
-    def vector_st(self, data):
-        median_list = []
-        asd_list = []
-        st_list = copy.deepcopy(data)
-        #print(self.train_data)
-        for i in range(4):
-            col_list = [alist[i] for alist in data]
-            alist = sorted(col_list)
-            median_list.append(self.median(alist)) 
-            asd_list.append(self.asd(alist, median_list[i]))
-            j = 0
-            for line in st_list:
-                st_list[j][i] = ((line[i] - median_list[i]) / asd_list[i])
-                j += 1
-            #st_list.append((np.array(col_list) - median_list[i]) / asd_list[i])
-        return st_list
-    
-    #归一的正规化，准确率83%
+    #max-min标准化，准确率83%
     def vector_s(self, data):
         max_list = []
         min_list = []
@@ -82,11 +68,10 @@ class Clsssify():
         r = np.sum(abs(v2 - v1))
         return r
     
-    #manhton距离
+    #manhton距离计算特征值距离
     def recommentor_manh(self):
         st_train = self.vector_standard(self.train_data)
         st_test = self.vector_standard(self.test_data)
-        #[[-0.5999999999999992, 2.0487804878048785, -1.8302828618968383, -1.7391304347826086, 'Iris-setosa'], [-1.5, 1.1707317073170729,
         right = 0.0
         test_list = []
         manh_list = []
@@ -103,11 +88,8 @@ class Clsssify():
                 right += 1
         acurrency = (right / len(st_test)) * 100
         return acurrency
-   
-    def oj(self, v1, v2):
-        return np.sqrt(sum(map(lambda v1, v2: pow((v1 - v2), 2), v1, v2)))
     
-    #准确率没有提高93.3%
+    # KNN算法
     def knn(self, oj_list):
         weight_dict = {"Iris-setosa":0.0, "Iris-versicolor":0.0, "Iris-virginica":0.0}
         for atuple in oj_list:
@@ -115,18 +97,19 @@ class Clsssify():
         rel_class = [(key, value) for key, value in weight_dict.items()]
         #print(sorted(rel_class, key=lambda x:x[1], reverse=True))
         rel_class = sorted(rel_class, key=lambda x:x[1], reverse=True)[0][0]
-        
         return rel_class
             
-            
-    #欧几里得距离
+    def oj(self, v1, v2):
+        return np.sqrt(sum(map(lambda v1, v2: pow((v1 - v2), 2), v1, v2)))      
+    
+    #欧几里得距离计算特征值距离
     def recommentor_oj(self, st_train, st_test):
+        #knn系数
         k = 3
         #st_train = self.vector_standard(self.train_data)
         #st_test = self.vector_standard(self.test_data)
         #st_train = self.train_data
         #st_test = self.test_data
-        #不标准化，准确率100% ？
         right = 0
         oj_list = []
         for test in st_test:
@@ -146,7 +129,7 @@ class Clsssify():
         acurrency = (right / len(st_test)) * 100
         return acurrency
     
-    #留一法测试准确93.3%
+    #留一法测试：准确93.3%
     def leaveone_test(self):
         st_data = self.vector_standard(self.train_data)
         output_list = []
