@@ -1,97 +1,109 @@
-class Bayes():    
+import os,math
+categories = os.listdir('C:\\doc\\ch7\\20news-bydate\\20news-bydate-train\\alt.atheism')
+categories = [filename for filename in categories
+                           if os.path.isdir('C:\\doc\\ch7\\20news-bydate\\20news-bydate-train\\' + filename)]
 
+
+
+#非结构化文本分类
+class Bayes_unstructure():
     def __init__(self):
-        self.data = []
-        #i=1
-        #self.data = self.loaddb("C:\\doc\\ch6\\house-votes\\hv-0%d"%i)
-        #[['both', 'sedentary', 'moderate', 'yes', 'i100'],
-        self.tenfold()
-        #self.prior, self.p_b = self.count_num()
+        self.vocabulary = {}
+        self.total = {}
+        self.prob = {}
+        self.load_data_clean()
+         
+    def load_data_clean(self):
         
-    def loaddb(self,filename):
-        data_list = []
-        with open (filename, "r") as fileobject:
-            for line in fileobject.readlines():
-                data_list.append(line.strip("\n").split("\t"))
-        return data_list
-    
-    def count_num(self):
-        prior = {}
-        p_b = {}
-        for line in self.data:
-            #计数条件概率
-            if line[0] not in p_b:
-                p_b[line[0]] = {}
-            for i in range(len(line)):
-                if i not in p_b[line[0]]:
-                    p_b[line[0]][i] = {}
-                if line[i] not in p_b[line[0]][i]:
-                    p_b[line[0]][i][line[i]] = 0
-                #"y","n"默认为0
-                if "y" not in p_b[line[0]][i]:
-                    p_b[line[0]][i]["y"] = 0
-                if "n" not in p_b[line[0]][i]:
-                    p_b[line[0]][i]["n"] = 0
-                p_b[line[0]][i][line[i]] += 1                
-            #计数 Y,N的先验概率
-            for i in range(len(line)):
-                if i not in prior:
-                    prior[i] = {}
-                if line[i] not in prior[i]:
-                    prior[i][line[i]] = 0
-                prior[i][line[i]] += 1        
-        # Y,N的先验概率    
-        for value in prior.values():
-            for category, num in value.items():
-                value[category] = round(num / len(self.data), 3)
-        # 条件概率 ， 也可以通过 高斯分布
-        for cate, value_cate in p_b.items():
-            for num, value in value_cate.items():
-                if num != 0 :
-                    for k, v in value.items():
-                        #value[k] = v / value_cate[0][cate] 
-                        #m=2,p参数 machine learning
-                        value[k] = round((v + 2 * prior[num][k]) / (value_cate[0][cate] + 2) , 3)
-        return prior, p_b
-    
-    #为什么要叫“朴素贝叶斯”呢？我们之所以能将多个概率进行相乘是因为这些概率都是具有独立性的。
-    #P(i100|健康，中等水平、热情一般，适应） = P(健康|i100)P(中等水平|i100)P(热情一般|i100)P(适应|i100)*0.4
-    
-    def tenfold(self):
-        currency = []
-        #分桶，处理数据集
-        for i in range(1,11):
-            if i != 10:
-                self.test = self.loaddb("C:\\doc\\ch6\\house-votes\\hv-0%d"%i)
-            else:
-                self.test = self.loaddb("C:\\doc\\ch6\\house-votes\\hv-%d"%i)
-            for k in range(1,11):
-                if k != i:
-                    if k != 10:
-                        self.data += self.loaddb("C:\\doc\\ch6\\house-votes\\hv-0%d"%k)
-                    else:
-                        self.data += self.loaddb("C:\\doc\\ch6\\house-votes\\hv-%d"%k)
-            self.prior, self.p_b = self.count_num()
-            # 测试桶i的贝叶斯概率
-            right = 0
-            for line in self.test:
-                predict = self.classify(line)
-                if predict == line[0]:
+        #加载停词表 stoplist174:83.49%,nostoplist:82.87%, stoplist: 83.36%
+        #停词表，去除这些词的理由是：
+        #1.	能够减少需要处理的数据量； 2.这些词的存在会对分类效果产生负面影响。
+        # H.P.	Luhn在他的论文中说“这些组成语法结构的单词是没有意义的，反而会产生很多 噪音”。
+        with open('C:\\doc\\ch7\\20news-bydate\\stopwords174.txt', "r") as file_object:
+            stopwords = file_object.read().split("\n")
+        #加载训练数据
+        train_dir = 'C:\\doc\\ch7\\20news-bydate\\20news-bydate-train\\'
+        categories = os.listdir(train_dir)
+        for category in categories:
+            files = os.listdir(train_dir + category)
+            contend = ""
+            self.total[category] = 0 
+            for file in files:
+                with open(train_dir + category + "\\" + file, "r", encoding='iso8859-1') as file_object:
+                    # encoding utf-8 该gbk unused
+                    contend += file_object.read()
+            contend = contend.split()
+            for lista in contend:
+                #分词并去除大小写以及无效字符
+                lista = lista.strip('\'".,?:/|/\-<>_()=+^*%~#!').lower()
+                # 计算停词表外的单词的频数
+                if lista != "" and lista not in stopwords:
+                    if category not in self.prob:
+                        self.prob[category] = {}
+                    if lista not in self.prob[category]:
+                        self.prob[category][lista] = 0
+                    if lista not in self.vocabulary:
+                        self.vocabulary[lista] = 0
+                    self.prob[category][lista] += 1
+                    self.total[category] += 1
+                    self.vocabulary[lista] += 1
+        #删除总频数较低的词汇 删除频数为1：83.39，3:83.5%，10：83.5%，50:83.56
+        #误删除分类内频数低于3的的词汇，导致准确率底下%2，优化后82.51460435475305%
+        to_del = []
+        for word,value in self.vocabulary.items():
+            if value <= 10:
+                to_del.append(word)
+                #total 减去无效次数后提高至 83.5%
+                for category in categories:
+                    if word in self.prob[category]:
+                        self.total[category] -= self.prob[category][word]
+        for word in to_del:
+            del self.vocabulary[word]
+         
+    def train_data(self):
+        #训练组的条件概率
+        for word in self.vocabulary:
+            for category,value in self.prob.items():
+                if word not in self.prob[category]:
+                    #count初始值由1优化0 准确率提高1.39%，0优化为-0.999准确率:-0.4%,-0.9:+0.2%
+                    count = 0
+                else :
+                    count = self.prob[category][word]
+                #优化的条件概率 83.5%
+                self.prob[category][word] = (count + 1) / (self.total[category] + len(self.vocabulary)) 
+                
+    def test_data(self):
+        #测试数据
+        total = 0.0
+        right = 0.0
+        test_dir = 'C:\\doc\\ch7\\20news-bydate\\20news-bydate-test\\'
+        categories = os.listdir(test_dir)
+        for category in categories:
+            files = os.listdir(test_dir + category)
+            
+            for file in files:
+                predict = {}
+                with open(test_dir + category + "\\" + file, "r", encoding='iso8859-1') as file_object:
+                    # encoding utf-8 ，gbk no useful
+                    contend = file_object.read().split()
+                for pre_category in categories:
+                    predict[pre_category] = 0
+                    #遍历文章的所有有效词汇
+                    for lista in contend:
+                        lista = lista.strip('\'".,?:/|/\-<>_()=+^*%~#!').lower()
+                        #使用对数形式运算极小数值
+                        if lista in self.prob[pre_category]:
+                            predict[pre_category] += math.log(self.prob[pre_category][lista])
+                #预测分类
+                pre_category = max(predict.items(), key=lambda x:x[1])[0]
+                total += 1
+                if pre_category == category:
                     right += 1
-                #print(predict ,line[0])
-            currency.append(right / len(self.test))             
-        print(sum(currency)/len(currency))
-            
-    def classify(self, line):
-        p_list = []
-        for k1, v1 in self.p_b.items():
-            mut = 1
-            for i in range(len(line)):
-                if i != 0:
-                    mut *= v1[i][line[i]] 
-            p_list.append([mut * self.prior[0][k1], k1])
-        #print(max(p_list))
-        return max(p_list)[1]
-            
-            
-a = Bayes()
+        accurency = right / total
+        print(accurency)                
+
+
+    
+b = Bayes_unstructure()
+b.train_data()
+b.test_data()
