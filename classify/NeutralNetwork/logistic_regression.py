@@ -29,11 +29,11 @@ m_train = train_set_x_orig.shape[0]
 m_test = test_set_x_orig.shape[0]
 num_px = train_set_x_orig.shape[1]
 
-#flatten平坦化
+#平坦化
 train_set_x_flatten = train_set_x_orig.reshape(train_set_x_orig.shape[0], -1).T
 test_set_x_flatten = test_set_x_orig.reshape(test_set_x_orig.shape[0], -1).T
 
-#stadizes标准化
+#标准化
 train_set_x = train_set_x_flatten/255.
 test_set_x = test_set_x_flatten/255.
 #shape: X[12288,209] Y[1,209] w[209,1]
