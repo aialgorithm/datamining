@@ -38,6 +38,7 @@ train_set_x = train_set_x_flatten/255.
 test_set_x = test_set_x_flatten/255.
 #shape: X[12288,209] Y[1,209] w[209,1]
 
+#激活函数
 def sigmoid(z):
     s = 1 / (1 + np.exp(-z))    
     return s
@@ -111,7 +112,7 @@ def predict(w, b, X):
 
 def model(X_train, Y_train, X_test, Y_test, num_iterations, learning_rate, print_cost):
     # initialize parameters with zeros (≈ 1 line of code)
-    w, b = initialize_with_zeros(X_train.shape[0])#w[12288,1],b=0
+    w, b = initialize_with_zeros(X_train.shape[0]) # w[12288,1],b=0
 
     # Gradient descent (≈ 1 line of code)
     parameters, grads, costs = optimize(w, b, X_train, Y_train, num_iterations, learning_rate, print_cost)
@@ -135,10 +136,10 @@ def model(X_train, Y_train, X_test, Y_test, num_iterations, learning_rate, print
          "learning_rate" : learning_rate,
          "num_iterations": num_iterations}    
     return d
-d = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 1000, learning_rate = 0.003, print_cost = False)
 #训练模型
+d = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 1000, learning_rate = 0.003, print_cost = False)
 
-#学习的速率 
+#不同学习的速率 
 learning_rates = [0.003, 0.001, 0.0001]
 models = {}
 for i in learning_rates:
@@ -146,9 +147,9 @@ for i in learning_rates:
     models[str(i)] = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 1500, learning_rate = i, print_cost = True)
     print ('\n' + "-------------------------------------------------------" + '\n')
 
+#提取cost和rate
 for i in learning_rates:
     plt.plot(np.squeeze(models[str(i)]["costs"]), label= str(models[str(i)]["learning_rate"]))
-#提取cost和rate
 
 plt.ylabel('cost')
 plt.xlabel('iterations')
