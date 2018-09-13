@@ -69,7 +69,7 @@ class hClusterer:
         ###     3. place the element on a priority queue, called simply queue,
         ###        based on the distance to the nearest neighbor (and a counter
         ###        used to break ties.
-
+ 
 
 
         # now push distances on queue        
