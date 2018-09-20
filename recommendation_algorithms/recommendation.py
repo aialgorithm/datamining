@@ -103,7 +103,7 @@ class Recommendor():
                 r = (xy_sum - x_sum * y_sum / n) / fenmu
                 return r
     
-    #余弦相关系数（未使用）       
+    #余弦相关系数      
     def cosxy(self, user_x, user_y):
         fenzi = 0
         fenmu = 0
@@ -120,7 +120,7 @@ class Recommendor():
         else :
             return 0
         
-    #曼哈顿距离（未使用）   
+    #曼哈顿距离   
     def manhaton(self, user1, user2):
         distance = 0
         for key in user1:
@@ -144,7 +144,6 @@ class Recommendor():
                 ratings[item2] /= self.frequencies[item][item2] 
 
     #items base协同推荐算法 slope one ：为user_a预测item_j的评分：
-    #（user的i评分+共有的i，j的评分的差异值）*共评分ij的用户数目 ,除以 （求和共有各物品i与j用户的数目）
     def slope_one_recommendation(self, user_a):
         self.compute_deviation()
         recommendations = {}
