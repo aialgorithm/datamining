@@ -1,13 +1,7 @@
 import codecs
 from math import sqrt
 
-#1.数据选择 2.数据预处理
 
-#3.数据转换
-
-#4.数据挖掘
-
-#5.解释与评价
 class Recommendor():
     
     def __init__(self):
