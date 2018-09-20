@@ -64,7 +64,7 @@ class KmeanppCluster():
             if distance < min:
                 min = distance
         return min
-        
+    
     def get_median(self, alist):
         """get median of list"""
         tmp = list(alist)
